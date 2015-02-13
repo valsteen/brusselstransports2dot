@@ -2,6 +2,17 @@ from collections import defaultdict
 import os
 from lxml.etree import fromstring
 
+# example run :
+# python brusselstransports2dot.py > map.dot
+
+# default 'dot' will have a vertical layout and will produce bezier curves
+# dot -Goverlap=scale  -Tpng map.dot -o map.png
+
+# sfdp is optimized for large graphs but draws straight lines
+# sfdp -Goverlap=scale  -Tpng map.dot -o map.png
+
+# sftp result will be huge. The image can be then tiled with convert -crop 4096x4096 map.png  tile_%d.png
+
 linecolors = {'1': 'C4008F',
  '12': '338C26',
  '13': '9EBFE3',
@@ -112,12 +123,12 @@ for name in os.listdir("."):
 
 print """
 graph {
-	graph [rankdir=LR bgcolor="#ffffff" fontname = "helvetica"];
-	edge [dir=none];
-	node [shape=box fontname = "helvetica"];
+	graph [fontsize=8 bgcolor="#ffffff" fontname="helvetica"]
+	edge [dir=none penwidth=2]
+	node [shape=box fontname="helvetica" fontsize=8]
 """
 
-print "\n".join('"%s" [weight="1.0"%s];' % (name, pos) for name, pos in stops.items())
+print "\n".join('"%s" [weight="1.0"%s] ' % (name, pos) for name, pos in stops.items())
 
 
 edges = set()
@@ -129,10 +140,10 @@ for line, itis in lines.items():
                 if prev == stop:
                     continue
                 edge = (tuple(sorted([prev, stop])), line)
-                if edge in edges:
-                    continue
-                edges.add(edge)
-                print '"%s" -- "%s" [color="#%s", penwidth=2];' % (prev, stop, linecolors[line])
+                if not edge in edges:
+                    edges.add(edge)
+                    print '"%s" -- "%s" [color="#%s"]' % (prev, stop, linecolors[line])
             prev = stop
-
-print "}"
+print """
+}
+"""
